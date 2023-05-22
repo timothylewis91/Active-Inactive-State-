@@ -1,0 +1,95 @@
+
+    @Test
+    public void testGetUserActiveStateByInvalidIDReturnsReturnsActiveState() {
+        // If the returned user isn't needed, ignore it and just call the method
+        SecurityContextUtil.getInstance().setAuthentication("foobar", "Foo", "Bar", Privilege.QUERY_USER_LIST);
+
+        // Mock the userService to return an empty Optional when getUser method is
+        // called with any Long value
+        Mockito.when(userService.getUser(Mockito.any())).thenReturn(Optional.empty());
+
+        // Fetch the user using the mocked UserService
+        Optional<AppUserObj> fetchedUserOptional = userService.getUser(1983L);
+
+        // Check if the optional contains a value
+        Assertions.assertFalse(fetchedUserOptional.isPresent());
+
+        // Call the method under test
+        ResponseEntity<Boolean> resp = userController.getUserActiveStateByID(1983L);
+
+        // Validate the response
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
+        Assertions.assertFalse(resp.hasBody());
+    }
+
+    @Test
+    public void testSetUserActiveStateByID() {
+        SecurityContextUtil.getInstance().setAuthentication("foobar", "Foo", "Bar", Privilege.UPDATE_USER_BY_ID);
+        AppUserObj mockUser = new AppUserObj();
+        mockUser.setActiveState(true);
+        Mockito.when(userService.setUserActiveState(Mockito.any(), Mockito.anyBoolean()))
+                .thenReturn(Optional.of(mockUser));
+        ResponseEntity<String> resp = userController.setUserActiveStateByID(1234L, true);
+        Assertions.assertEquals(HttpStatus.OK, resp.getStatusCode());
+        Assertions.assertEquals("active", resp.getBody());
+    }
+
+    @Test
+    public void testSetUserActiveStateByIDValidIDReturnsUpdatedActiveState() {
+        SecurityContextUtil.getInstance().setAuthentication("foobar", "Foo", "Bar", Privilege.UPDATE_USER_BY_ID);
+        AppUserObj user = Mockito.mock(AppUserObj.class);
+
+        Mockito.when(user.isActive()).thenReturn(true);
+
+        Mockito.when(userService.setUserActiveState(Mockito.anyLong(), Mockito.anyBoolean()))
+                .thenReturn(Optional.of(user));
+        Mockito.when(userService.getUser(Mockito.anyLong())).thenReturn(Optional.of(user));
+
+        ResponseEntity<String> resp = userController.setUserActiveStateByID(1983L, true);
+
+        Assertions.assertEquals(HttpStatus.OK, resp.getStatusCode());
+        Assertions.assertTrue(resp.hasBody());
+        Assertions.assertEquals("active", resp.getBody());
+    }
+
+    @Test
+    public void testSetUserActiveStateByIDFailsIfUserDoesNotExist() {
+        SecurityContextUtil.getInstance().setAuthentication("foobar", "Foo", "Bar", Privilege.UPDATE_USER_BY_ID);
+        Mockito.when(userService.getUser(Mockito.any())).thenReturn(Optional.empty());
+        ResponseEntity<String> resp = userController.setUserActiveStateByID(1234L, true);
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
+        Assertions.assertFalse(resp.hasBody());
+    }
+
+    @Test
+    public void testSetUserActiveStateByIDSuccessIfUserExists() {
+        AppUserObj user = SecurityContextUtil.getInstance().setAuthentication("foobar", "Foo", "Bar",
+                Privilege.UPDATE_USER_BY_ID);
+        user.setActiveState(true);
+
+        Mockito.when(userService.getUser(Mockito.any())).thenReturn(Optional.of(user));
+        Mockito.when(userService.setUserActiveState(Mockito.any(), Mockito.anyBoolean())).thenReturn(Optional.of(user));
+
+        ResponseEntity<String> resp = userController.setUserActiveStateByID(user.getId(), true);
+        Assertions.assertEquals(HttpStatus.OK, resp.getStatusCode());
+        Assertions.assertTrue(resp.hasBody());
+        Assertions.assertEquals("active", resp.getBody());
+    }
+
+    @Test
+    public void testSetUserActiveStateByIDFailsNoPrivileges() {
+        SecurityContextUtil.getInstance().setAuthentication("foobar", "Foo", "Bar");
+        Assertions.assertThrows(AccessDeniedException.class, () -> userController.setUserActiveStateByID(1L, true));
+    }
+
+    @Test
+    public void testSetUserActiveStateByIDInactive() {
+        SecurityContextUtil.getInstance().setAuthentication("foobar", "Foo", "Bar", Privilege.UPDATE_USER_BY_ID);
+        AppUserObj mockUser = new AppUserObj();
+        mockUser.setActiveState(false); // setting active state to false
+        Mockito.when(userService.setUserActiveState(Mockito.any(), Mockito.anyBoolean()))
+                .thenReturn(Optional.of(mockUser));
+        ResponseEntity<String> resp = userController.setUserActiveStateByID(1234L, true);
+        Assertions.assertEquals(HttpStatus.OK, resp.getStatusCode());
+        Assertions.assertEquals("inactive", resp.getBody()); // expecting "inactive" response
+    }
