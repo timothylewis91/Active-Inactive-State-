@@ -1,0 +1,33 @@
+    /**
+ * Get the active state of a specific user by their ID.
+ *
+ * @param userID The user id of the user being requested
+ * @return The active state of the user
+ */
+@GetMapping("/{userID}/active")
+@PreAuthorize("hasAuthority('QUERY_USER_LIST')")
+@Operation(description = "Get the active state of a specific user by their ID.", responses = @ApiResponse(content = @Content(schema = @Schema(implementation = Boolean.class))))
+public ResponseEntity<Boolean> getUserActiveStateByID(@PathVariable("userID") final Long userID) {
+    return userService.getUser(userID)
+            .map(AppUserObj::isActive)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
+}
+
+/**
+ * Set the active state of a specific user by their ID.
+ *
+ * @param userID    The user id of the user being requested
+ * @param active    The new active state for the user
+ * @return The updated active state of the user
+ */
+@PutMapping("/{userID}/active")
+@PreAuthorize("hasAuthority('UPDATE_USER_BY_ID')")
+@Operation(description = "Set the active state of a specific user by their ID.", responses = @ApiResponse(content = @Content(schema = @Schema(implementation = String.class))))
+public ResponseEntity<String> setUserActiveStateByID(@PathVariable("userID") final Long userID, @RequestParam("active") final boolean active) {
+    return userService.setUserActiveState(userID, active)
+            .map(AppUserObj::isActive)
+            .map(activeState -> activeState ? "active" : "inactive")
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
+}
