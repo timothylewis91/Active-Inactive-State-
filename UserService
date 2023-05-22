@@ -1,0 +1,27 @@
+
+/**
+ * Get the active state of a user by their ID.
+ *
+ * @param userId The user's ID
+ * @return An Optional containing the user's active state if the user exists
+ */
+public Optional<Boolean> getUserActiveState(final Long userId) {
+    return appUserRepository.findById(userId)
+            .map(AppUserEntity::isActiveState);
+}
+
+/**
+ * Set the active state of a user by their ID.
+ *
+ * @param userId The user's ID
+ * @param active The new active state
+ * @return An Optional containing the updated user if the user exists
+ */
+public Optional<AppUserObj> setUserActiveState(final Long userId, final boolean active) {
+    return appUserRepository.findById(userId)
+            .map(user -> {
+                user.setActiveState(active);
+                return appUserRepository.saveAndFlush(user);
+            })
+            .map(userMapper::mapToAppUser);
+}
