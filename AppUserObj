@@ -1,0 +1,81 @@
+package com.bah.residency.expedition.security.user;
+
+import com.bah.residency.expedition.security.role.RoleObj;
+import com.bah.residency.expedition.workbook.models.WorkbookPermissionObj;
+
+import lombok.Data;
+
+import java.util.List;
+
+@Data
+public class AppUserObj {
+    private Long id;
+
+    /**
+     * The username.
+     */
+    private String username;
+
+    /**
+     * The first name.
+     */
+    private String firstName;
+
+    /**
+     * The last name.
+     */
+    private String lastName;
+
+    /**
+     * The hash of this user's password.
+     */
+    private String hash;
+
+    /**
+     * The salt for the password hash.
+     */
+    private String salt;
+
+    /**
+     * The roles available for this user.
+     */
+    private List<RoleObj> roles;
+
+    /**
+     * The workbook permissions available for this user.
+     */
+    private List<WorkbookPermissionObj> workbookPermissions;
+
+    /**
+     * The security answer associated with the User Account
+     */
+    private String securityAnswer;
+
+     /**
+     * The id of the security question associated with the User Account
+     */
+    private Long securityQuestionId;
+
+    /*
+     * The email address associated with the account
+     */
+    private String email;
+
+     /*
+     * The organization associated with user of the account
+     */
+    private String organization;
+
+    /**
+     * The active state of the user.
+     */
+    private Boolean activeState;
+
+    /**
+     * Getter method for the active state of the user.
+     * @return the active state of the user
+     */
+    public Boolean isActive() {
+        return this.activeState;
+    }
+}
